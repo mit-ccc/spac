@@ -63,6 +63,20 @@ Because `spac` defaults to JSON syntax when outputting extractions,
 strings will have quotes around them. You can drop the quotes by using
 `--raw`.
 
+## Error Handling
+
+`spac` drops input if it can't parse a line or find the necessary
+fields, which differs from `jq`'s behavior. In the future `spac` will
+support optionally filling in null for missing fields.
+
+By default, it will count up parsing errors and print them to stderr
+when it's done so that you're aware if there are problems. The process
+will also return an error code. To suppress this warning and return
+code, use the `-q` option.
+
+If `spac` encounters an error, it will print out the offending line if
+you supply the `-v` option.
+
 ## Building
 
 You'll need a relatively new version of Rust, its build tool Cargo, as
