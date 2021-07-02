@@ -1,0 +1,11 @@
+[package]
+name = "spac"
+version = "0.1.0"
+authors = ["Wes Chow <wesc@media.mit.edu>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+simdjson-rust = { path = "src/simdjson-rust" }
+clap = "3.0.0-beta.2"

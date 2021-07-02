@@ -1,0 +1,3 @@
+[submodule "src/simdjson-rust"]
+	path = src/simdjson-rust
+	url = git@github.com:wesc/simdjson-rust.git
