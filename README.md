@@ -79,9 +79,18 @@ you supply the `-v` option.
 
 ## Building
 
+This repo tracks wesc/simdjson-rust in the `src/simdjson-rust`
+directory as a git submodule. Check it out:
+
+```
+$ git submodule update --init
+```
+
 You'll need a relatively new version of Rust, its build tool Cargo, as
-well as a C++ compiler capable of producing simd
-instructions. Building is straightforward:
+well as a C++ compiler capable of producing SIMD instructions. As of
+this writing, `spac` has only been tested with Rust 1.53.0.
+
+Building is straightforward:
 
 ```
 $ cargo build
