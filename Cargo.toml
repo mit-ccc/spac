@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 simdjson-rust = { path = "src/simdjson-rust" }
 clap = "3.0.0-beta.2"
+flate2 = { version = "1.0.20", features = ["zlib-ng-compat"], default-features = false }
+rayon = "1.5.1"

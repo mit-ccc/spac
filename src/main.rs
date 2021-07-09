@@ -1,8 +1,12 @@
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
+use std::sync::mpsc::sync_channel;
+use std::thread;
 
 use clap::{AppSettings, Clap};
+use flate2::read::GzDecoder;
+use rayon::prelude::*;
 use simdjson_rust::dom::element::{Element, ElementType};
 
 fn extract_fields(
@@ -154,18 +158,65 @@ fn files_input(fnames: Vec<String>) -> impl Iterator<Item = String> {
     iters.flat_map(|it| it)
 }
 
+fn zline_files(fnames: &Vec<String>) -> bool {
+    let fnames = fnames.clone();
+    let (tx, rx) = sync_channel(1000);
+    let th = thread::spawn(|| {
+        fnames.into_par_iter().for_each_with(tx, |s, fname| {
+            let file = match File::open(&fname) {
+                Ok(f) => f,
+                Err(_err) => {
+                    panic!("unable to open file: {}", fname);
+                }
+            };
+            let reader = BufReader::new(GzDecoder::new(file));
+
+            let iter = reader
+                .lines()
+                .filter(|line| match line.is_ok() {
+                    true => true,
+                    false => panic!("invalid input file: {}", fname),
+                })
+                .map(|line| line.unwrap())
+                .map(|line| s.send(line).unwrap());
+
+            // iterators are lazy, so force consumption
+            iter.last();
+        });
+    });
+
+    for line in rx {
+        println!("{}", line);
+    }
+
+    th.join().unwrap();
+    true
+}
+
 #[derive(Clap)]
 #[clap(version = "(build)", author = "Wes Chow <wesc@media.mit.edu>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     #[clap(subcommand)]
-    select: SelectCommand,
+    subcmd: SubCommand,
 }
 
 #[derive(Clap)]
-enum SelectCommand {
+enum SubCommand {
+    /// parallel line oriented gunzip
+    Zline(ZlineOpts),
     /// field selector
     Select(SelectOpts),
+}
+
+#[derive(Clap)]
+struct ZlineOpts {
+    /// input files
+    #[clap(required(true))]
+    input: Vec<String>,
+    /// parallelism (by default uses all cores)
+    #[clap(short, default_value("0"))]
+    p: usize,
 }
 
 #[derive(Clap)]
@@ -191,8 +242,18 @@ struct SelectOpts {
 
 fn run_app() -> bool {
     let opts: Opts = Opts::parse();
-    match opts.select {
-        SelectCommand::Select(opts) => {
+    match opts.subcmd {
+        SubCommand::Zline(opts) => {
+            let inputs = opts.input;
+            if opts.p != 0 {
+                rayon::ThreadPoolBuilder::new()
+                    .num_threads(std::cmp::max(opts.p - 1, 1)) // one core is used by the output thread
+                    .build_global()
+                    .unwrap();
+            }
+            zline_files(&inputs)
+        }
+        SubCommand::Select(opts) => {
             let pointers: Vec<&str> = opts.fields.split(",").collect();
             if opts.raw && opts.format == "json" {
                 eprintln!("warning: --raw has no effect when using json formatting")
