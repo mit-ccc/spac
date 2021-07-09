@@ -121,7 +121,7 @@ fn extract(
     return true;
 }
 
-fn stream_stdin() -> impl Iterator<Item = String> {
+fn stdin_input() -> impl Iterator<Item = String> {
     let file = io::stdin();
     let reader = BufReader::new(file);
 
@@ -132,7 +132,7 @@ fn stream_stdin() -> impl Iterator<Item = String> {
     return iter;
 }
 
-fn stream_file(fname: String) -> impl Iterator<Item = String> {
+fn file_input(fname: String) -> impl Iterator<Item = String> {
     let file = match File::open(&fname) {
         Ok(f) => f,
         Err(_err) => {
@@ -149,8 +149,8 @@ fn stream_file(fname: String) -> impl Iterator<Item = String> {
     return iter;
 }
 
-fn stream_files(fnames: Vec<String>) -> impl Iterator<Item = String> {
-    let iters = fnames.into_iter().map(|fname| stream_file(fname));
+fn files_input(fnames: Vec<String>) -> impl Iterator<Item = String> {
+    let iters = fnames.into_iter().map(|fname| file_input(fname));
     iters.flat_map(|it| it)
 }
 
@@ -199,7 +199,7 @@ fn run_app() -> bool {
             }
             if opts.input.len() == 0 {
                 return extract(
-                    stream_stdin(),
+                    stdin_input(),
                     &pointers,
                     opts.raw,
                     opts.quiet,
@@ -208,7 +208,7 @@ fn run_app() -> bool {
                 );
             } else {
                 return extract(
-                    stream_files(opts.input),
+                    files_input(opts.input),
                     &pointers,
                     opts.raw,
                     opts.quiet,
