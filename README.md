@@ -77,6 +77,19 @@ code, use the `-q` option.
 If `spac` encounters an error, it will print out the offending line if
 you supply the `-v` option.
 
+## zline
+
+`spac zline` decompresses .gz files in parallel using the fast zlib-ng
+library and interleaves output at line breaks. In other words, if file
+A decompresses to "AAAAA" and B decompresses to "BBBBB"
+simultaneously, `zline` will ensure that its output will be "AAAAA" in
+its entirely *then* "BBBBB" or the other way around, and never mixed
+like "AABBAAABBB". Thus, `zline` is safe to pipe into a subsequent
+invocation for field selection.
+
+On a single file, `zline` is faster than gzip, and on multiple files
+`zline` will attempt to use very core in the system.
+
 ## Building
 
 This repo tracks wesc/simdjson-rust in the `src/simdjson-rust`
